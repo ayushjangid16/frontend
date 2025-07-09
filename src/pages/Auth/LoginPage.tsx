@@ -16,6 +16,8 @@ import type { SuccessLogin } from "@/utils/ApiResponse";
 import axios from "axios";
 import { useState } from "react";
 import { PulseLoader } from "react-spinners";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/store/slices/userSlice";
 
 interface FormData {
   email: string;
@@ -23,6 +25,7 @@ interface FormData {
 }
 
 function LoginPage() {
+  const dispatch = useDispatch();
   const { register, handleSubmit, reset } = useForm<FormData>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   let backendUrl = import.meta.env.VITE_BACKEND_BASE_URL;
@@ -44,10 +47,20 @@ function LoginPage() {
 
       setIsLoading(false);
       reset();
-      navigate("/admin/dashboard", { replace: true });
+
+      const hasDashboardPermission =
+        // @ts-ignore
+        data.data.userInfo.role_id.username == "admin";
+      dispatch(setUser(data.data));
+
+      if (hasDashboardPermission) {
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        navigate("/user/dashboard", { replace: true });
+      }
     } catch (error) {
       setIsLoading(false);
-      console.error("Registration error:", error);
+      console.error("Error: ", error);
       if (axios.isAxiosError(error)) {
         const allErrors = error.response?.data?.error?.details;
         if (allErrors) {
@@ -89,12 +102,12 @@ function LoginPage() {
                     <div className="grid gap-3">
                       <div className="flex items-center">
                         <Label htmlFor="password">Password</Label>
-                        <a
-                          href="#"
+                        <Link
+                          to="/forget-password"
                           className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                         >
                           Forgot your password?
-                        </a>
+                        </Link>
                       </div>
                       <Input
                         id="password"

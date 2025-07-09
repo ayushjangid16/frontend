@@ -23,7 +23,12 @@ export type SuccessRegister = {
 export type SuccessLogin = {
   message: string;
   status: string;
-  data: {};
+  data: {
+    userInfo: {};
+    permissions: [
+      { _id: string; name: string; username: string; isDeleted: boolean }
+    ];
+  };
   metadata: {
     token: string;
   };

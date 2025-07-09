@@ -52,6 +52,7 @@ export function NavUser({
         const errorData: ErrorLogout = await response.json();
 
         if (errorData.error.message == "Invalid or expired token.") {
+          localStorage.clear();
           navigate("/login", { replace: true });
         }
 
