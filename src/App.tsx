@@ -7,6 +7,7 @@ import Dashboard from "./pages/dashboard/page";
 import ForgetPassword from "./pages/Auth/ForgetPassword";
 import VerifyResetPassword from "./pages/Auth/VerifyResetPassword";
 import { useSelector } from "react-redux";
+import HomePage from "./pages/home/HomePage";
 
 const allPaths = ["/login", "/verify-reset-password", "/forget-password"];
 
@@ -38,8 +39,8 @@ function App() {
       if (userData.userRole == "admin") {
         navigate("/admin/dashboard");
       } else {
+        navigate("/home");
       }
-      
     }
   }, []);
 
@@ -55,6 +56,7 @@ function App() {
         />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/admin/dashboard" element={<Dashboard />} />
+        <Route path="/home" element={<HomePage />} />
       </Routes>
     </div>
   );

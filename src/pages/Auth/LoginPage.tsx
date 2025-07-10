@@ -56,7 +56,7 @@ function LoginPage() {
       if (hasDashboardPermission) {
         navigate("/admin/dashboard", { replace: true });
       } else {
-        navigate("/user/dashboard", { replace: true });
+        navigate("/home", { replace: true });
       }
     } catch (error) {
       setIsLoading(false);
