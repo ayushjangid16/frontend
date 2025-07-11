@@ -33,12 +33,12 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/admin/dashboard",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
-      url: "#",
+      title: "Writter Requests",
+      url: "/admin/requests",
       icon: IconListDetails,
     },
     {

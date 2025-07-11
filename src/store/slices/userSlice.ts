@@ -70,7 +70,11 @@ const userSlice = createSlice({
       state.userData.isLoggedIn = true;
       state.userData.userInfo = userData;
     },
-    removeUser: (state, action) => {},
+    removeUser: (state) => {
+      state.userData.isLoggedIn = false;
+      state.userData.userRole = "";
+      state.userData.userInfo = {};
+    },
   },
 });
 

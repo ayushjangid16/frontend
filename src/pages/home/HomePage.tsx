@@ -17,8 +17,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IconLogout, IconUser, IconWriting } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import BlogCard from "@/components/BlogCard";
+import { errorToast, successToast } from "@/components/customToast";
+import { PulseLoader } from "react-spinners";
+import { useNavigate } from "react-router-dom";
+import { removeUser } from "@/store/slices/userSlice";
 
 interface NavbarLinks {
   url: string;
@@ -26,10 +30,14 @@ interface NavbarLinks {
 }
 
 function HomePage() {
+  const backendUrl = import.meta.env.VITE_BACKEND_BASE_URL;
   const [navLinks, setNavLinks] = useState<NavbarLinks[] | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // @ts-ignore
-  const userData = useSelector((state) => state.userData);
+  const userData = useSelector((state) => state.userReducer.userData);
 
   useEffect(() => {
     if (!userData.isLoggedIn) {
@@ -48,6 +56,76 @@ function HomePage() {
       setNavLinks(arr);
     }
   }, []);
+
+  const handleRequest = async () => {
+    setIsLoading(true);
+
+    const response = await fetch(`${backendUrl}/request/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        userId: userData.userInfo.userInfo._id,
+      }),
+    });
+
+    const result = await response.json();
+    setIsLoading(false);
+    if (!response.ok) {
+      console.log("Error", result);
+      errorToast(result.error.message);
+      const allMessages = [
+        "User not found or deleted.",
+        "Invalid or expired token.",
+        "Please Provide a Token.",
+        "Invalid Token",
+      ];
+      if (allMessages.includes(result.error.message)) {
+        dispatch(removeUser());
+        localStorage.clear();
+        navigate("/login", { replace: true });
+      }
+      return;
+    }
+
+    successToast("Request is Sent");
+  };
+
+  const handleLogout = async () => {
+    setIsLoading(true);
+
+    const response = await fetch(`${backendUrl}/auth/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+
+    const result = await response.json();
+    setIsLoading(false);
+    if (!response.ok) {
+      errorToast(result.error.message);
+      const allMessages = [
+        "Invalid or expired token.",
+        "Please Provide a Token.",
+        "Invalid Token",
+      ];
+      if (allMessages.includes(result.error.message)) {
+        dispatch(removeUser());
+        localStorage.clear();
+        navigate("/login", { replace: true });
+      }
+      return;
+    }
+
+    successToast("Logout Successfully");
+    dispatch(removeUser());
+    localStorage.clear();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <div className="relative min-h-screen bg-gray-50">
@@ -88,14 +166,18 @@ function HomePage() {
                 Profile
               </DropdownMenuItem>
               {userData.userRole == "user" ? (
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleRequest}>
                   <IconWriting />
-                  Be a Writter
+                  {isLoading === false ? (
+                    "Be a Writter"
+                  ) : (
+                    <PulseLoader size={8} />
+                  )}
                 </DropdownMenuItem>
               ) : (
                 ""
               )}
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
                 {" "}
                 <IconLogout />
                 Logout
