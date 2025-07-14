@@ -71,6 +71,7 @@ const userSlice = createSlice({
       state.userData.userInfo = userData;
     },
     removeUser: (state) => {
+      localStorage.clear();
       state.userData.isLoggedIn = false;
       state.userData.userRole = "";
       state.userData.userInfo = {};
@@ -78,6 +79,6 @@ const userSlice = createSlice({
   },
 });
 
-export const { setUser, removeUser, getUser } = userSlice.actions;
+export const { setUser, removeUser } = userSlice.actions;
 
 export default userSlice.reducer;

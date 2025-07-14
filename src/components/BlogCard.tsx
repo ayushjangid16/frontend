@@ -13,7 +13,20 @@ import {
   ShareIcon,
 } from "lucide-react";
 
-export default function BlogCard() {
+interface BlogFile {
+  id: string;
+  url: string;
+}
+
+interface Blog {
+  id: string;
+  title: string;
+  description: string;
+  files: BlogFile[];
+}
+
+export default function BlogCard({ blog }: { blog: Blog }) {
+  const backendUrl = import.meta.env.VITE_BACKEND_BASE_IMAGE_URL;
   return (
     <Card className="w-full shadow-md hover:scale-105 transition-transform cursor-pointer">
       <CardHeader className="flex flex-row items-center justify-between py-2">
@@ -35,15 +48,19 @@ export default function BlogCard() {
         </Button>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="relative aspect-video bg-muted border-y" />
+        <div
+          className="relative aspect-video bg-muted border-y"
+          style={{
+            backgroundImage: `url(${backendUrl}${blog.files[0].url})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
         <div className="pt-3 pb-4 px-6">
-          <h2 className="font-semibold">Exploring New Horizons</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Had an amazing time discovering hidden gems! 🌄 Can&apos;t wait to
-            share more from this journey.{" "}
-            <span className="text-blue-500">#Wanderlust</span>{" "}
-            <span className="text-blue-500">#NatureLovers</span>
-          </p>
+          <h2 className="font-semibold">{blog.title}</h2>
+          <div className="mt-1 text-sm text-muted-foreground">
+            <div dangerouslySetInnerHTML={{ __html: `${blog.description}` }} />
+          </div>
         </div>
       </CardContent>
       <Separator />

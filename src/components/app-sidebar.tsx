@@ -4,6 +4,7 @@ import {
   IconDashboard,
   IconFolder,
   IconHelp,
+  IconHome,
   IconInnerShadowTop,
   IconListDetails,
   IconSearch,
@@ -31,6 +32,11 @@ const data = {
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
+    {
+      title: "Home",
+      url: "/home",
+      icon: IconHome,
+    },
     {
       title: "Dashboard",
       url: "/admin/dashboard",

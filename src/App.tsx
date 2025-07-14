@@ -10,6 +10,7 @@ import { useSelector } from "react-redux";
 import HomePage from "./pages/home/HomePage";
 import AllRequests from "./pages/admin/AllRequests";
 import Admin from "./pages/admin/Admin";
+import WriteBlog from "./pages/write-blog/WriteBlog";
 
 const allPaths = ["/login", "/verify-reset-password", "/forget-password"];
 
@@ -64,6 +65,7 @@ function App() {
         </Route>
 
         <Route path="/home" element={<HomePage />} />
+        <Route path="/write" element={<WriteBlog />} />
       </Routes>
     </div>
   );
