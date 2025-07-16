@@ -14,6 +14,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PulseLoader } from "react-spinners";
 import { errorToast, successToast } from "@/components/customToast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -93,6 +101,7 @@ function WriteBlog() {
     }
   }, [userData]);
 
+  // create blog api
   const onSubmit: SubmitHandler<BlogForm> = async (data) => {
     try {
       setIsLoading(true);
@@ -142,6 +151,7 @@ function WriteBlog() {
     }
   };
 
+  // fetch user's blog
   const fetchUserBlog = async () => {
     const response = await fetch(
       `${backendUrl}/blog/user/all?limit=5&page=${page}&search=${search}`,
@@ -171,12 +181,22 @@ function WriteBlog() {
       return;
     }
 
-    setBlogs((prev) => [...prev, ...result.data.blogs]);
+    if (page == 0) {
+      setBlogs(result.data.blogs);
+    } else {
+      setBlogs((prev) => [...prev, ...result.data.blogs]);
+    }
   };
 
   useEffect(() => {
+    setPage(0);
+
     fetchUserBlog();
-  }, [page, search]);
+  }, [search]);
+
+  useEffect(() => {
+    fetchUserBlog();
+  }, [page]);
 
   const onChangeContent = (value: string) => {
     setContent(value);
@@ -184,7 +204,7 @@ function WriteBlog() {
     setValue("description", content);
   };
 
-  const scrollDivRef = useRef(null);
+  const scrollDivRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = () => {
     const div = scrollDivRef.current;
@@ -208,11 +228,96 @@ function WriteBlog() {
     };
   }, []);
 
+  const handleDelete = async (blogId: string) => {
+    const response = await fetch(`${backendUrl}/blog/delete?id=${blogId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      errorToast(result.error.message);
+      const allMessages = [
+        "Invalid or expired token.",
+        "Please Provide a Token.",
+        "Invalid Token",
+      ];
+      if (allMessages.includes(result.error.message)) {
+        dispatch(removeUser());
+        localStorage.clear();
+        navigate("/login", { replace: true });
+      }
+      return;
+    }
+
+    successToast("Blog Deleted Successfully");
+    setPage(0);
+  };
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
+  const [editContent, setEditContent] = useState({});
+
+  const handleEdit = (blogId: string) => {
+    const blog = blogs.find((b) => b.id === blogId);
+    if (!blog) return;
+
+    setSelectedBlog(blog);
+    setContent(blog.description);
+    setEditContent({ title: blog.title });
+
+    setShowEditModal(true);
+  };
+
+  const handleUpdate = async (blogId: string, e) => {
+    e.preventDefault();
+    const finalData = { ...editContent, description: content };
+
+    const response = await fetch(`${backendUrl}/blog/edit`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        id: blogId,
+        title: finalData.title,
+        description: finalData.description,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      errorToast(result.error.message);
+      const allMessages = [
+        "Invalid or expired token.",
+        "Please Provide a Token.",
+        "Invalid Token",
+      ];
+      if (allMessages.includes(result.error.message)) {
+        dispatch(removeUser());
+        localStorage.clear();
+        navigate("/login", { replace: true });
+      }
+      return;
+    }
+
+    setShowEditModal(false);
+    setPage(0);
+    fetchUserBlog();
+    successToast("Blog Edited Successfully");
+  };
+
   return (
     <div className="relative min-h-screen bg-gray-50">
-      {/* Navigation Bar */}
       <Navbar />
       <main className="pt-28 px-6 pb-10 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+        {/* Submit Blog Form */}
         <div className="col-span-1">
           <Card>
             <CardHeader>
@@ -265,6 +370,7 @@ function WriteBlog() {
           </Card>
         </div>
 
+        {/* Blog List */}
         <div
           ref={scrollDivRef}
           className="col-span-1 bg-white shadow-md rounded-lg p-6 overflow-y-auto"
@@ -272,7 +378,6 @@ function WriteBlog() {
         >
           <div className="mb-4">
             <h2 className="text-xl font-bold text-gray-800">Your Blogs</h2>
-
             <div className="my-3">
               <Label className="my-2">Search</Label>
               <Input
@@ -283,36 +388,100 @@ function WriteBlog() {
             </div>
           </div>
 
-          {blogs.map((ele, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between p-4 rounded-lg shadow-lg mb-4"
-            >
-              <div className="flex items-center space-x-4">
-                <img
-                  src="https://github.com/shadcn.png"
-                  alt="Blog Thumbnail"
-                  className="w-16 h-16 rounded object-cover"
-                />
-                <div>
-                  <h2 className="font-medium text-lg text-gray-700">
-                    {ele.title || "My Blog Title"}
-                  </h2>
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {ele.description ||
-                      "This is a brief description of the blog post."}
-                  </p>
+          {blogs.length === 0 ? (
+            <div className="w-full text-center mt-2">No Blogs Found</div>
+          ) : (
+            blogs.map((ele) => (
+              <div
+                key={ele.id}
+                className="flex items-center justify-between p-4 rounded-lg shadow-lg mb-4"
+              >
+                <div className="flex items-center space-x-4">
+                  <img
+                    src="https://github.com/shadcn.png"
+                    alt="Blog Thumbnail"
+                    className="w-16 h-16 rounded object-cover"
+                  />
+                  <div>
+                    <h2 className="font-medium text-lg text-gray-700">
+                      {ele.title}
+                    </h2>
+                    <div
+                      className="text-sm text-gray-600 line-clamp-2"
+                      dangerouslySetInnerHTML={{ __html: ele.description }}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex space-x-2">
+                  <Button variant="default" onClick={(e) => handleEdit(ele.id)}>
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => handleDelete(ele.id)}
+                  >
+                    Delete
+                  </Button>
                 </div>
               </div>
-
-              <div className="flex space-x-2">
-                <Button variant="default">Edit</Button>
-                <Button variant="destructive">Delete</Button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </main>
+      {/* Edit Modal */}
+      {selectedBlog && (
+        <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+          <DialogTrigger>
+            <div /> {/* Hidden Trigger */}
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Blog</DialogTitle>
+              <DialogDescription>
+                Update your blog details below.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form className="flex flex-col gap-6">
+              <div className="grid gap-3">
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  placeholder="Enter a catchy title"
+                  value={editContent.title}
+                  onChange={(e) => {
+                    setEditContent({
+                      ...editContent,
+                      title: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+
+              <div className="grid gap-3">
+                <Label htmlFor="description">Description</Label>
+                <RichTextEditor
+                  output="html"
+                  content={content}
+                  hideToolbar={false}
+                  onChangeContent={onChangeContent}
+                  extensions={extensions}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                onClick={(e) => handleUpdate(selectedBlog.id, e)}
+                disabled={isLoading}
+              >
+                {isLoading ? <PulseLoader size={8} /> : "Update"}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+      ;
     </div>
   );
 }

@@ -41,7 +41,7 @@ const getNavLinks = (userRole: string): NavbarLinks[] => {
     case "admin":
       return [
         { url: "/home", label: "Home" },
-        { url: "/write", label: "Write" },
+        { url: "/post", label: "Post" },
         { url: "/about", label: "About Us" },
       ];
     default:
