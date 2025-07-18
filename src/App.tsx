@@ -11,6 +11,7 @@ import HomePage from "./pages/home/HomePage";
 import AllRequests from "./pages/admin/AllRequests";
 import Admin from "./pages/admin/Admin";
 import WriteBlog from "./pages/write-blog/WriteBlog";
+import PostDetail from "./pages/post-detail/PostDetail";
 
 const allPaths = ["/login", "/verify-reset-password", "/forget-password"];
 
@@ -66,6 +67,7 @@ function App() {
 
         <Route path="/home" element={<HomePage />} />
         <Route path="/post" element={<WriteBlog />} />
+        <Route path="/post/detail/*" element={<PostDetail />} />
       </Routes>
     </div>
   );

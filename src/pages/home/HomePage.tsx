@@ -17,6 +17,12 @@ interface Blog {
   title: string;
   description: string;
   files: BlogFile[];
+  likes: number;
+  comments: number;
+  owner: {
+    id: string;
+    fullname: string;
+  };
 }
 
 function HomePage() {
