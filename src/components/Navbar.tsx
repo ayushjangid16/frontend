@@ -165,10 +165,12 @@ const Navbar = () => {
           <DropdownMenuContent className="mr-4">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <IconUser />
-              Profile
-            </DropdownMenuItem>
+            <Link to={"/profile"}>
+              <DropdownMenuItem>
+                <IconUser />
+                Profile
+              </DropdownMenuItem>
+            </Link>
             {hasPermission(
               "request_writer_role",
               userData?.userInfo?.permissions

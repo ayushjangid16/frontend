@@ -12,6 +12,7 @@ import AllRequests from "./pages/admin/AllRequests";
 import Admin from "./pages/admin/Admin";
 import WriteBlog from "./pages/write-blog/WriteBlog";
 import PostDetail from "./pages/post-detail/PostDetail";
+import Profile from "./pages/profile/Profile";
 
 const allPaths = ["/login", "/verify-reset-password", "/forget-password"];
 
@@ -68,6 +69,7 @@ function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/post" element={<WriteBlog />} />
         <Route path="/post/detail/*" element={<PostDetail />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </div>
   );
