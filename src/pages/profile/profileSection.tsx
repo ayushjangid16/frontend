@@ -16,6 +16,7 @@ const ProfileSection = ({
   setProfile: React.Dispatch<React.SetStateAction<UserType | null>>;
 }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
   const backendImageUrl = import.meta.env.VITE_BACKEND_BASE_IMAGE_URL;
 
   const getInitials = (name: string) =>
@@ -49,8 +50,8 @@ const ProfileSection = ({
           <div className="relative group">
             <Avatar className="h-24 w-24">
               <AvatarImage
-                src={`${backendImageUrl}${profile.avatar_url[0].url}`}
-                alt={profile.avatar_url[0].url}
+                src={`${backendImageUrl}${profile?.avatar_url?.[0]?.url}`}
+                alt={profile?.avatar_url?.[0]?.url ?? ""}
               />
               <AvatarFallback>{getInitials(profile.fullname)}</AvatarFallback>
             </Avatar>

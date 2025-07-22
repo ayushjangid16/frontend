@@ -40,11 +40,12 @@ export default function BlogCard({ blog }: { blog: Blog }) {
     navigate(`/post/detail?id=${blog.id}`);
   };
 
+  const handleProfileClick = async () => {
+    navigate(`/user/id=${blog.owner.id}`);
+  };
+
   return (
-    <Card
-      className="w-full shadow-md hover:scale-[1.02] transition-transform cursor-pointer"
-      onClick={handleClick}
-    >
+    <Card className="w-full shadow-md hover:scale-[1.02] transition-transform">
       {/* Header */}
       <CardHeader className="flex flex-row items-center justify-between py-2">
         <div className="flex items-center gap-3">
@@ -59,8 +60,13 @@ export default function BlogCard({ blog }: { blog: Blog }) {
             <h6 className="text-sm leading-none font-medium">
               {blog.owner.fullname}
             </h6>
-            <span className="text-xs text-muted-foreground">
-              @{blog.owner.fullname}
+            <span
+              className="text-xs text-muted-foreground cursor-pointer"
+              onClick={handleProfileClick}
+            >
+              @
+              {blog.owner.fullname.split(" ")[0] +
+                blog.owner.fullname.split(" ")[1]}
             </span>
           </div>
         </div>
@@ -70,7 +76,7 @@ export default function BlogCard({ blog }: { blog: Blog }) {
       </CardHeader>
 
       {/* Content */}
-      <CardContent className="p-0">
+      <CardContent className="p-0 cursor-pointer" onClick={handleClick}>
         <div
           className="relative aspect-video bg-muted border-y"
           style={{

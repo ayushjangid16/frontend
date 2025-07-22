@@ -1,5 +1,4 @@
-// EditProfileDialog.tsx
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { type UserType } from "./Profile";
+import { errorToast, successToast } from "@/components/customToast";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { removeUser } from "@/store/slices/userSlice";
 
 interface EditProfileDialogProps {
   profile: UserType;
@@ -27,32 +30,105 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
   onOpenChange,
   onProfileUpdate,
 }) => {
+  const backendUrl: string = import.meta.env.VITE_BACKEND_BASE_URL;
+  const backendImage: string = import.meta.env.VITE_BACKEND_BASE_IMAGE_URL;
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const [formData, setFormData] = useState({
     fullname: profile.fullname,
     email: profile.email,
   });
+
   const [isLoading, setIsLoading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string>(
+    `${backendImage}${profile?.avatar_url?.[0]?.url}`
+  );
+
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleAvatarUpload = () => {
-    // Simulate avatar upload
-    // (Integrate with real avatar storage in a real app)
+    fileInputRef.current?.click();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setAvatarPreview(reader.result as string);
+      reader.readAsDataURL(file);
 
-    // Simulate API call delay
-    await new Promise((res) => setTimeout(res, 1000));
+      // now make a call to db
 
-    onProfileUpdate(formData);
-    setIsLoading(false);
-    onOpenChange(false);
+      const fileData = new FormData();
+      fileData.append("user", file);
+
+      const response = await fetch(`${backendUrl}/profile/image`, {
+        method: "PUT",
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        },
+        body: fileData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        errorToast(result.error.message);
+        const logoutMessages = [
+          "User not found or deleted.",
+          "Invalid or expired token.",
+          "Please Provide a Token.",
+          "Invalid Token",
+        ];
+        if (logoutMessages.includes(result.error.message)) {
+          dispatch(removeUser());
+          localStorage.clear();
+          navigate("/login", { replace: true });
+        }
+        return;
+      }
+
+      successToast("Profile Image Changed");
+    }
   };
+
+  const handleSubmit = async () => {};
+
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+
+  //   let avatarUrl = profile?.avatar_url?.[0]?.url;
+
+  //   if (avatarFile) {
+  //     const uploadData = new FormData();
+  //     uploadData.append("avatar", avatarFile);
+
+  //     try {
+  //       // const res = await fetch("/api/upload-avatar", {
+  //       //   method: "POST",
+  //       //   body: uploadData,
+  //       // });
+
+  //       // const data = await res.json();
+  //       // avatarUrl = data.url;
+  //     } catch (error) {
+  //       console.error("Avatar upload failed:", error);
+  //     }
+  //   }
+
+  //   onProfileUpdate({ ...formData, avatarUrl });
+  //   setIsLoading(false);
+  //   onOpenChange(false);
+  // };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -60,10 +136,14 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex flex-col items-center">
             <Avatar className="h-20 w-20 mb-2">
-              <AvatarImage src="" alt={formData.fullname} />
+              <AvatarImage
+                src={avatarPreview ?? ""}
+                alt={avatarPreview ?? ""}
+              />
               <AvatarFallback>
                 {formData.fullname
                   .split(" ")
@@ -82,6 +162,13 @@ const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
               <Upload className="h-4 w-4" />
               Upload Avatar
             </Button>
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+            />
           </div>
 
           <div>

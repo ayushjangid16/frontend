@@ -1,37 +1,27 @@
-// ProfilePage.tsx
-import React, { useEffect, useState } from "react";
-import ProfileSection from "./profileSection";
 import Navbar from "@/components/Navbar";
+import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Users, UserPlus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { Users, UserPlus, Badge, Mail, User } from "lucide-react";
 import { removeUser } from "@/store/slices/userSlice";
 import { errorToast } from "@/components/customToast";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import type { UserType } from "../profile/Profile";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-export type UserType = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  fullname: string;
-  email: string;
-  followers: number;
-  following: number;
-  avatar_url:
-    | [
-        {
-          id: string | null;
-          url: string | null;
-        }
-      ]
-    | null;
-};
-
-const ProfilePage: React.FC = () => {
+function UserPage() {
   const backendUrl = import.meta.env.VITE_BACKEND_BASE_URL;
+  const backendImageUrl = import.meta.env.VITE_BACKEND_BASE_IMAGE_URL;
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [profile, setProfile] = useState<UserType | null>(null);
+
+  const getInitials = (name: string) =>
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -67,19 +57,50 @@ const ProfilePage: React.FC = () => {
   }, []);
 
   return (
-    <>
+    <div>
       <Navbar />
       <div className="max-w-4xl mx-auto p-6 space-y-6 mt-24">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Profile</h1>
-          <p className="text-gray-600">
-            Manage your account information and settings
-          </p>
         </div>
 
         {profile && (
           <>
-            <ProfileSection profile={profile} setProfile={setProfile} />
+            {/* <ProfileSection profile={profile} setProfile={setProfile} /> */}
+            <Card>
+              <CardHeader className="pb-4">
+                <div className="flex justify-between items-center">
+                  <CardTitle>Profile Information</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="flex flex-col sm:flex-row gap-6">
+                <div className="relative group">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage
+                      src={`${backendImageUrl}${profile?.avatar_url?.[0]?.url}`}
+                      alt={profile?.avatar_url?.[0]?.url ?? ""}
+                    />
+                    <AvatarFallback>
+                      {getInitials(profile.fullname)}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold">{profile.fullname}</h2>
+                  <p className="text-gray-600 flex items-center mt-2">
+                    <Mail className="w-4 h-4 mr-2" />
+                    {profile.email}
+                  </p>
+                  <p className="text-gray-600 flex items-center mt-1">
+                    <User className="w-4 h-4 mr-2" />
+                    Member ID: {profile.id}
+                  </p>
+                  <Badge variant="outline" className="mt-2">
+                    Standard User
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>
@@ -101,9 +122,9 @@ const ProfilePage: React.FC = () => {
           </>
         )}
       </div>
-    </>
+    </div>
   );
-};
+}
 
 const Stat = ({
   label,
@@ -121,4 +142,4 @@ const Stat = ({
   </div>
 );
 
-export default ProfilePage;
+export default UserPage;

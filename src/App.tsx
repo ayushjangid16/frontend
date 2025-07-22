@@ -14,6 +14,8 @@ import WriteBlog from "./pages/write-blog/WriteBlog";
 import PostDetail from "./pages/post-detail/PostDetail";
 import Profile from "./pages/profile/Profile";
 
+import UserPage from "./pages/user/User";
+
 const allPaths = ["/login", "/verify-reset-password", "/forget-password"];
 
 function App() {
@@ -70,6 +72,7 @@ function App() {
         <Route path="/post" element={<WriteBlog />} />
         <Route path="/post/detail/*" element={<PostDetail />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/user/:id" element={<UserPage />} />
       </Routes>
     </div>
   );
