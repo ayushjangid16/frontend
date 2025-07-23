@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Users, UserPlus, Badge, Mail, User } from "lucide-react";
 import { removeUser } from "@/store/slices/userSlice";
-import { errorToast } from "@/components/customToast";
+import { errorToast, successToast } from "@/components/customToast";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -21,6 +21,7 @@ type UserType = {
   email: string;
   followers: number;
   following: number;
+  followedByMe: boolean;
   avatar_url:
     | [
         {
@@ -39,6 +40,10 @@ function UserPage() {
   const dispatch = useDispatch();
   const [profile, setProfile] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const [isFollowing, setIsFollowing] = useState<boolean | undefined>(
+    undefined
+  );
 
   const getInitials = (name: string) =>
     name
@@ -83,6 +88,56 @@ function UserPage() {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+    if (profile) {
+      setIsFollowing(profile.followedByMe);
+      console.log("Follow -> ", profile.followedByMe);
+    }
+  }, [profile]);
+
+  const handleFollowUnfollow = async () => {
+    if (!profile) return; // safety check
+
+    const url = isFollowing ? `${backendUrl}/unfollow` : `${backendUrl}/follow`;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        following: profile.id, // user to follow/unfollow
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      errorToast(result.error.message);
+      const logoutMessages = [
+        "User not found or deleted.",
+        "Invalid or expired token.",
+        "Please Provide a Token.",
+        "Invalid Token",
+      ];
+      if (logoutMessages.includes(result.error.message)) {
+        dispatch(removeUser());
+        localStorage.clear();
+        navigate("/login", { replace: true });
+      }
+      return;
+    }
+
+    if (isFollowing) {
+      successToast("User Unfollowed");
+      setIsFollowing(false);
+    } else {
+      successToast("User Followed");
+      setIsFollowing(true);
+    }
+  };
+
   return (
     <div>
       <Navbar />
@@ -115,7 +170,13 @@ function UserPage() {
                   {profile.fullname}
                 </h2>
 
-                <FollowButton userId={profile.id} />
+                <Button
+                  onClick={handleFollowUnfollow}
+                  className="w-full sm:w-40 text-sm font-medium tracking-wide transition-all duration-200"
+                  variant={isFollowing ? "destructive" : "default"}
+                >
+                  {isFollowing ? "Unfollow" : "Follow"}
+                </Button>
               </CardContent>
             </Card>
 
@@ -225,40 +286,6 @@ const PostCard = ({ blog }: { blog: Blog }) => {
         </div>
       </div>
     </div>
-  );
-};
-
-const FollowButton = ({ userId }: { userId: string }) => {
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  // Optional: Fetch initial follow status when component mounts
-  useEffect(() => {
-    // fetch follow status from backend if needed
-    // setIsFollowing(true or false)
-  }, [userId]);
-
-  const toggleFollow = async () => {
-    setLoading(true);
-    try {
-      // Replace this with actual API call
-      if (isFollowing) {
-        // Unfollow API
-      } else {
-        // Follow API
-      }
-      setIsFollowing(!isFollowing);
-    } catch (error) {
-      // handle error (toast etc)
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Button onClick={toggleFollow} disabled={loading} className="w-1/4">
-      {loading ? "Processing..." : isFollowing ? "Unfollow" : "Follow"}
-    </Button>
   );
 };
 
