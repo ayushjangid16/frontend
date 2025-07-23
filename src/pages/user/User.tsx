@@ -7,6 +7,11 @@ import { errorToast } from "@/components/customToast";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { PulseLoader } from "react-spinners";
+import { type Blog } from "@/components/BlogCard";
+import { Heart, MessageCircle } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 
 type UserType = {
   id: string;
@@ -24,7 +29,7 @@ type UserType = {
         }
       ]
     | null;
-  posts: number;
+  posts: Blog[];
 };
 
 function UserPage() {
@@ -33,6 +38,7 @@ function UserPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [profile, setProfile] = useState<UserType | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const getInitials = (name: string) =>
     name
@@ -42,8 +48,10 @@ function UserPage() {
       .toUpperCase();
 
   useEffect(() => {
+    setIsLoading(true);
+    const id = new URLSearchParams(window.location.search).get("id");
     const fetchUser = async () => {
-      const response = await fetch(`${backendUrl}/profile`, {
+      const response = await fetch(`${backendUrl}/user?id=${id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -52,6 +60,7 @@ function UserPage() {
       });
 
       const result = await response.json();
+      setIsLoading(false);
       if (!response.ok) {
         errorToast(result.error.message);
         const logoutMessages = [
@@ -91,29 +100,22 @@ function UserPage() {
                   <CardTitle>Profile Information</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="flex flex-col sm:flex-row gap-6">
-                <div className="relative group">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage
-                      src={`${backendImageUrl}${profile?.avatar_url?.[0]?.url}`}
-                      alt={profile?.avatar_url?.[0]?.url ?? ""}
-                    />
-                    <AvatarFallback>
-                      {getInitials(profile.fullname)}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-semibold">{profile.fullname}</h2>
-                  <p className="text-gray-600 flex items-center mt-2">
-                    <Mail className="w-4 h-4 mr-2" />
-                    {profile.email}
-                  </p>
-                  <p className="text-gray-600 flex items-center mt-1">
-                    <User className="w-4 h-4 mr-2" />
-                    Member ID: {profile.id}
-                  </p>
-                </div>
+              <CardContent className="flex flex-col items-center gap-6">
+                <Avatar className="h-28 w-28">
+                  <AvatarImage
+                    src={`${backendImageUrl}${profile?.avatar_url?.[0]?.url}`}
+                    alt={profile?.avatar_url?.[0]?.url ?? ""}
+                  />
+                  <AvatarFallback>
+                    {getInitials(profile.fullname)}
+                  </AvatarFallback>
+                </Avatar>
+
+                <h2 className="text-3xl font-semibold text-gray-900">
+                  {profile.fullname}
+                </h2>
+
+                <FollowButton userId={profile.id} />
               </CardContent>
             </Card>
 
@@ -121,7 +123,7 @@ function UserPage() {
               <CardHeader>
                 <CardTitle>Social Statistics</CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-4">
+              <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Stat
                   label="Followers"
                   value={profile.followers}
@@ -132,8 +134,27 @@ function UserPage() {
                   value={profile.following}
                   icon={<UserPlus />}
                 />
+                <Stat
+                  label="Posts"
+                  value={profile.posts.length}
+                  icon={<Badge />}
+                />
               </CardContent>
             </Card>
+
+            <Separator />
+
+            <main className="px-6 pb-10 w-full grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {!isLoading ? (
+                profile.posts.map((ele, index) => (
+                  <PostCard key={index} blog={ele} />
+                ))
+              ) : (
+                <div className="col-span-full flex justify-center items-center h-40">
+                  <PulseLoader size={8} />
+                </div>
+              )}
+            </main>
           </>
         )}
       </div>
@@ -156,5 +177,89 @@ const Stat = ({
     <div className="text-sm text-gray-600">{label}</div>
   </div>
 );
+
+const PostCard = ({ blog }: { blog: Blog }) => {
+  const backendImageUrl = import.meta.env.VITE_BACKEND_BASE_IMAGE_URL;
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/post/detail?id=${blog.id}`);
+  };
+
+  return (
+    <div
+      onClick={handleClick}
+      className="max-w-sm bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow cursor-pointer"
+    >
+      {/* Image */}
+      {blog.files?.length > 0 && (
+        <img
+          src={`${backendImageUrl}${blog.files[0].url}`}
+          alt={blog.title}
+          className="w-full h-48 object-cover rounded-t-2xl"
+        />
+      )}
+
+      {/* Content */}
+      <div className="p-5 flex flex-col justify-between h-48">
+        <div>
+          <h3 className="font-bold text-lg text-gray-900 mb-2 truncate">
+            {blog.title}
+          </h3>
+          <p
+            className="text-gray-600 text-sm leading-relaxed line-clamp-3"
+            dangerouslySetInnerHTML={{ __html: blog.description }}
+          />
+        </div>
+
+        {/* Footer: Likes & Comments */}
+        <div className="flex items-center space-x-6 mt-4">
+          <span className="flex items-center text-red-500 space-x-1">
+            <Heart className="w-5 h-5" />
+            <span className="font-semibold text-gray-700">{blog.likes}</span>
+          </span>
+          <span className="flex items-center text-blue-500 space-x-1">
+            <MessageCircle className="w-5 h-5" />
+            <span className="font-semibold text-gray-700">{blog.comments}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const FollowButton = ({ userId }: { userId: string }) => {
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Optional: Fetch initial follow status when component mounts
+  useEffect(() => {
+    // fetch follow status from backend if needed
+    // setIsFollowing(true or false)
+  }, [userId]);
+
+  const toggleFollow = async () => {
+    setLoading(true);
+    try {
+      // Replace this with actual API call
+      if (isFollowing) {
+        // Unfollow API
+      } else {
+        // Follow API
+      }
+      setIsFollowing(!isFollowing);
+    } catch (error) {
+      // handle error (toast etc)
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button onClick={toggleFollow} disabled={loading} className="w-1/4">
+      {loading ? "Processing..." : isFollowing ? "Unfollow" : "Follow"}
+    </Button>
+  );
+};
 
 export default UserPage;

@@ -14,12 +14,12 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-interface BlogFile {
+export interface BlogFile {
   id: string;
   url: string;
 }
 
-interface Blog {
+export type Blog = {
   id: string;
   title: string;
   description: string;
@@ -30,7 +30,7 @@ interface Blog {
     id: string;
     fullname: string;
   };
-}
+};
 
 export default function BlogCard({ blog }: { blog: Blog }) {
   const backendUrl = import.meta.env.VITE_BACKEND_BASE_IMAGE_URL;
@@ -41,7 +41,7 @@ export default function BlogCard({ blog }: { blog: Blog }) {
   };
 
   const handleProfileClick = async () => {
-    navigate(`/user/id=${blog.owner.id}`);
+    navigate(`/user?id=${blog.owner.id}`);
   };
 
   return (

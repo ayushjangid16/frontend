@@ -72,7 +72,7 @@ function App() {
         <Route path="/post" element={<WriteBlog />} />
         <Route path="/post/detail/*" element={<PostDetail />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/user/:id" element={<UserPage />} />
+        <Route path="/user/*" element={<UserPage />} />
       </Routes>
     </div>
   );
