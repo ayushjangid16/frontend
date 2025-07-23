@@ -6,8 +6,26 @@ import { removeUser } from "@/store/slices/userSlice";
 import { errorToast } from "@/components/customToast";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import type { UserType } from "../profile/Profile";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
+type UserType = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  fullname: string;
+  email: string;
+  followers: number;
+  following: number;
+  avatar_url:
+    | [
+        {
+          id: string | null;
+          url: string | null;
+        }
+      ]
+    | null;
+  posts: number;
+};
 
 function UserPage() {
   const backendUrl = import.meta.env.VITE_BACKEND_BASE_URL;
@@ -95,9 +113,6 @@ function UserPage() {
                     <User className="w-4 h-4 mr-2" />
                     Member ID: {profile.id}
                   </p>
-                  <Badge variant="outline" className="mt-2">
-                    Standard User
-                  </Badge>
                 </div>
               </CardContent>
             </Card>
