@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Users, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { removeUser } from "@/store/slices/userSlice";
 import { errorToast } from "@/components/customToast";
 
@@ -32,6 +32,7 @@ const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [profile, setProfile] = useState<UserType | null>(null);
+  const userData = useSelector((state: any) => state.userReducer.userData);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -81,23 +82,27 @@ const ProfilePage: React.FC = () => {
           <>
             <ProfileSection profile={profile} setProfile={setProfile} />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Social Statistics</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-4">
-                <Stat
-                  label="Followers"
-                  value={profile.followers}
-                  icon={<Users />}
-                />
-                <Stat
-                  label="Following"
-                  value={profile.following}
-                  icon={<UserPlus />}
-                />
-              </CardContent>
-            </Card>
+            {userData.userRole === "writter" ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Social Statistics</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-4">
+                  <Stat
+                    label="Followers"
+                    value={profile.followers}
+                    icon={<Users />}
+                  />
+                  <Stat
+                    label="Following"
+                    value={profile.following}
+                    icon={<UserPlus />}
+                  />
+                </CardContent>
+              </Card>
+            ) : (
+              ""
+            )}
           </>
         )}
       </div>

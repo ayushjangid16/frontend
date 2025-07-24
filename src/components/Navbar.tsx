@@ -24,6 +24,7 @@ import { errorToast, successToast } from "@/components/customToast";
 import { removeUser } from "@/store/slices/userSlice";
 import { useEffect, useState } from "react";
 import { hasPermission } from "@/utils/permissions";
+import NotificationBell from "./NotificationBell";
 
 interface NavbarLinks {
   url: string;
@@ -154,7 +155,10 @@ const Navbar = () => {
           </NavigationMenuList>
         </NavigationMenu>
       </div>
-      <div className="absolute right-0 mr-4 py-4">
+      <div className="absolute right-8 mr-16 py-4">
+        <NotificationBell />
+      </div>
+      <div className="absolute right-8 mr-4 ml-2 py-4">
         <DropdownMenu>
           <DropdownMenuTrigger>
             <Avatar className="h-10 w-10">
@@ -162,7 +166,7 @@ const Navbar = () => {
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="mr-4">
+          <DropdownMenuContent className="mr-4 mt-2">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <Link to={"/profile"}>
